@@ -10,8 +10,23 @@ import itertools
 from decimal import *
 
 
-
 def retrieve_raw_lottery_data():
+    """This pulls the most updated copy of the winning numbers list from the NY
+    government's Powerball API, strips the timestamp and multiplier
+    information (but not the datestamp), and returns a list of lists. Each list
+    in the list has the following format:
+
+    [['draw_date', 'winning_numbers'], ... ,['2010-02-03', '17 22 36 37 52 24']]
+
+    This returns Powerball drawings from 2010 onwards, NOT from when the game
+    changed in 2015. For your reference, the first date in which the
+    modified 69-number game was played was '2015-10-07'. Any drawings from '2015-10-03'
+    and earlier were in the earlier 59-number format. Dates in this dataseries are
+    always in YYYY/MM/DD format.
+
+    To reference this data in subsequent functions, you can call it with the
+    variable 'original_output'."""
+
     with requests.Session() as s:
         results = s.get("https://data.ny.gov/resource/8vkr-v8vh.csv?$$app_token=vjxekB7YMF1tZ0e8Oz7cFezDP")
 
@@ -26,28 +41,25 @@ def retrieve_raw_lottery_data():
         list_element.remove(list_element[1])
 
     return original_output
-    """
-    The code above should serve as the basis for all 'live' Powerball analyses
 
-    It pulls the most updated copy of the winning numbers list from the NY
-    government's Powerball API, strips the useless timestamps and multiplier
-    information, and returns a list of lists. Each list in the list has the
-    following format:
-
-    [['draw_date', 'winning_numbers'], ... ,['2010-02-03', '17 22 36 37 52 24']]
-
-    This returns Powerball drawings from 2010 onwards, NOT from when the game
-    changed in 2015. For your reference, the first date in which the
-    modified 69# game was played was '2015-10-07'. Any drawings from '2015-10-03'
-    and earlier were in the earlier 59# format. Dates in this dataseries are
-    always in YYYY/MM/DD format.
-
-    To reference this data in subsequent functions, you can call it with the
-    variable 'original_output'.
-    """
-retrieve_raw_lottery_data()
 
 def sum_all_winning_numbers():
+    """This takes the string version of the six winning numbers, removes
+    the powerball number, turns the remaining five numbers into
+    integers and then sums all the integers for each individual drawing.
+
+    Afterwards, it overwrites the value for 'winning_numbers' in the
+    ['draw_date','winning_numbers'] list with the sum, resulting in
+    the format ['draw_date',winning_number_sum].
+
+    It then splits this list of lists into two separate master lists: one that corresponds
+    to before the game changed, and one that corresponds to after the game changed.
+
+    Finally, each of these modified list of lists is returned as a variable
+    for downstream use: 'pre_change' corresponds to drawings from
+    2010-02-03 to 2015-10-03, while 'post_change' corresponds to drawings from
+    2015-10-07 to present."""
+
     original_output = retrieve_raw_lottery_data()
     pre_change = []
     post_change = []
@@ -74,22 +86,8 @@ def sum_all_winning_numbers():
                 counter += 1
             pre_change.append(list_element)
 
+    return pre_change
     return post_change
-    """
-    The code above takes the string version of the six winning numbers, removes
-    the powerball number, turns the remaining five "normal" numbers into
-    integers and then adds all the integers together.
-
-    Afterwards, it overwrites the value for 'winning_numbers' in the
-    ['draw_date','winning_numbers'] list with the summed integer, resulting in
-    the format ['draw_date',winning_number_sum].
-
-    It then splits this list of lists into two separate master lists: one that corresponds
-    to before the game changed, and one that corresponds to after the game changed.
-
-    Finally, each of these modified list of lists is written to a separate
-    CSV file for analysis with Excel.
-    """
 
 
 def tell_me_all_possible_combinations():
@@ -202,18 +200,17 @@ def tell_me_combinations_within_range():
     random_guess_chance = (100*((1/Decimal(valid_count))*(Decimal(historical_range)/291)))
     guess_within_range_chance = (100*(1/(Decimal(valid_count))))
 
-    print("If we assume that you're guessing randomly, you've got a \
-"+str(random_guess_chance)+"% chance of guessing the right \
-combination, compared to an original 0.0000089% chance.")
+    print("If we assume that you're guessing randomly, you've got a "+
+    str(random_guess_chance)+"% chance of guessing the right combination."+
+    "\nCompared to your original 0.0000089% chance, that's a(n) "
+    +str(random_guess_chance/Decimal(0.0000089))+"x improvement!")
 
-    print("If we assume that you're only guessing inside your desired range, \
-you've got a "+str(guess_within_range_chance)+"% chance of guessing the right \
-combination, compared to an original 0.0000089% chance.")
+    print("*"*100)
 
-    #print("For reference, that's a(n) "+str(100*(1-(valid_count/11229676)))+"% \
-    #improvement over your original 1 in 11229676 chance.")
+    print("If we assume that you're only guessing inside your desired range,"+
+    " you've got a "+str(guess_within_range_chance)+"% chance of guessing the "+
+    "right combination.\nCompared to your original 0.0000089% chance, that's "+
+    "a(n) "+str(guess_within_range_chance/Decimal(0.0000089))+"x improvement!")
+
 
 tell_me_combinations_within_range()
-
-getcontext().prec = 5
-Context(7040)
