@@ -91,6 +91,44 @@ def sum_all_winning_numbers():
 
 
 def tell_me_all_possible_combinations():
+    """Populates a list with all possible combinations of five numbers,
+    without replacement, from a pool of numbers ranging from 1-69 (inclusive).
+
+    Each combination in this list is then summed and compared to a range of
+    allowable sums. If this combination's sum is within the range, 1 is added to
+    a counter. This counter is cumulative for all 11,000,000+ combinations
+    being summed and compared within a single range. Between different ranges,
+    counters are distinct and separate.
+
+    This summing, range comparison and counting is repeated for all possible
+    ranges with a lower bound between 70-289 and an upper bound between 71-290.
+    Ranges must be positive, e.g. 70-71 is okay, but 71-70 is not.
+
+    The ratio of (# of combination sums that fit within the range)/
+    (# of combination sums) yields a percentage which we call
+    'remaining_guess_percentage'. This is the percentage of all possible
+    combinations that are included if we only allow combinations with a sum
+    that falls within the given range.
+
+    This is then compared to a calculated ratio of
+    (# of historical Powerball drawing sums that fall within our above range)/
+    (# of all historical Powerball drawing sums), which we call
+    'remaining_hit_percentage'.
+
+    Essentially, as (remaining_guess_percentage/remaining_hit_percentage)
+    approaches 0, we improve our odds of guessing the correct combination if we
+    limit our guesses to combinations whose sum falls within the described
+    range. We refer to this quotient as our 'edge'.
+
+    So, provided that we're
+    guessing within the range that produced our 'edge', we will have improved
+    odds which will be calculated and listed alongside our edge and our
+    range bounds each time a better edge is produced for a given lower bound.
+
+    Once all combinations' sums for all possible ranges have been iterated
+    through, a final statement is printed with the best possible edge and its
+    corresponding bounds and probability."""
+
     best_edge = 1
     best_low = 0
     best_high = 0
@@ -99,8 +137,6 @@ def tell_me_all_possible_combinations():
     possible_low = []
     number_set = []
     post_change = sum_all_winning_numbers()
-    #low_range = int(input("Type in the desired low range integer."))
-    #high_range = int(input("Type in the desired high range integer."))
 
     for _ in range(1,70):
         number_set.append(_)
@@ -153,23 +189,6 @@ def tell_me_all_possible_combinations():
 
     print("Best edge was "+str(best_edge)+" resulting from the range "+str(best_low)+" to "+str(best_high)+".")
     print("*"*40)
-    """
-    print("In the range "+str(low_range)+" to "+str(high_range)+", historical hits are down to "+str(historical_range)+" from 291. That's a(n) "+str(hit_reduction)+"% reduction.")
-    print("By contrast, possible combinations are down to "+str(valid_count)+" from 11229676. That's a(n) "+str(guess_reduction)+"% reduction.")
-
-    if guess_reduction > hit_reduction:
-        print("You gained a "+str(guess_reduction-hit_reduction)+"% edge! Best previously was "+str(best_edge)+", from the range "+str(best_low)+" to "+str(best_high)+".")
-        print("*"*60)
-
-    if hit_reduction > guess_reduction:
-        print("You took a loss on that one. Try a different combination.")
-        print("*"*60)
-
-    if edge > best_edge:
-        best_edge = edge + 0
-        best_low = low_range + 0
-        best_high = high_range + 0
-    """
 
 
 def tell_me_combinations_within_range():
