@@ -123,6 +123,10 @@ def tell_me_all_possible_combinations():
     Raises:
         None
 
+    To Do:
+        Verify the number of all possible combinations. Correct value may be
+        11238513 as opposed to the current 11229676.
+
     """
 
     # A running tracker of improving edges. Edges improve as they approach 0.
