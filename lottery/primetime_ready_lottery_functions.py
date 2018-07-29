@@ -101,7 +101,7 @@ def sum_all_winning_numbers():
                 counter += 1
             pre_change.append(list_element)
 
-    # Returns the matrix for 59 number drawings.
+    # Uncomment to return the matrix for 59 number drawings.
     # return pre_change
 
     # Returns the matrix for 69 number drawings.
