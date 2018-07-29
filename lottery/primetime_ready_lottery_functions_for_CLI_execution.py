@@ -108,7 +108,7 @@ def sum_all_winning_numbers():
     return post_change
 
 
-def tell_me_all_possible_combinations():
+def tell_me_all_possible_combinations(x):
     """Prints best lottery sum ranges and their edges for post_change matrix.
 
     Args:
@@ -165,72 +165,78 @@ def tell_me_all_possible_combinations():
     combinations = itertools.combinations(number_set,r=5)
     combination_list = list(combinations)
 
-    # Populates our 'possible_low' with lower bounds 70-290 (inclusive).
+    # Populates our 'possible_high' with upper bounds 70-290 (inclusive).
     for _ in range(70,291):
-        possible_low.append(_)
+        possible_high.append(_)
 
-    # All possible values for the upper bound of our sum range. Identical to our
-    # 'possible_low', negative ranges will be prevented using an if statement.
-    possible_high = possible_low[:]
+    # Lets each thread work with only a single 'lower_bound' value at a time.
+    # Necessary to allow processor threads to divide the work between
+    # themselves by picking a single 'lower_bound' from __main__'s range, then
+    # repeating the work for subsequent 'lower_bound' values as part of distinct
+    # work assignments.
+    lower_bound = x
 
-    # Calculates our 'valid_count','historical_range' and 'edge' for ranges with
-    # all possible bounds. Assigns this information to 'best_edge', 'best_low'
-    # and 'best_high' when the calculated 'edge' is smaller (better) than the
-    # existing 'best_edge'.
-    for lower_bound in possible_low:
-        for upper_bound in possible_high:
-            if (upper_bound-lower_bound) > 0: # If range is not inverted...
-                valid_count = 0 # Reset 'valid_count' for new range
-                historical_range = 0 # Reset 'historical_range' for new range
-                for element in combination_list:
-                    temporary_list = list(element)
-                    sum = (temporary_list[0]+temporary_list[1]+temporary_list[2]
-                          +temporary_list[3]+temporary_list[4])
-                    if lower_bound <= sum <= upper_bound:
-                        valid_count += 1
+    # Instead of calculating 'valid_count', 'historical_range' and 'edge' for
+    # all possible ranges, we're going to let each processor thread iterate
+    # using all possible upper bounds but only a single lower bound at a time.
+    # Be aware that these threads will process the load asynchronously, and as
+    # a result, there will be a lot of incorrectly ordered text output that will
+    # need to be sifted through.
+    for upper_bound in possible_high:
+        if (upper_bound-lower_bound) > 0: # If range is not inverted...
+            valid_count = 0 # Reset 'valid_count' for new range
+            historical_range = 0 # Reset 'historical_range' for new range
+            for element in combination_list:
+                temporary_list = list(element)
+                sum = (temporary_list[0]+temporary_list[1]+temporary_list[2]
+                      +temporary_list[3]+temporary_list[4])
+                if lower_bound <= sum <= upper_bound:
+                    valid_count += 1
 
-                for index, element_list in enumerate(post_change):
-                    if index > 0:
-                        if lower_bound <= int(element_list[1]) <= upper_bound:
-                            historical_range += 1
+            for index, element_list in enumerate(post_change):
+                if index > 0:
+                    if lower_bound <= int(element_list[1]) <= upper_bound:
+                        historical_range += 1
 
-                # Calculates 'remaining_hit_percentage' for this range.
-                remaining_hit_percentage = (historical_range/291)
+            # Calculates 'remaining_hit_percentage' for this range.
+            remaining_hit_percentage = (historical_range/291)
 
-                # Calculates 'remaining_guess_percentage' for this range.
-                remaining_guess_percentage = (valid_count/11229676)
+            # Calculates 'remaining_guess_percentage' for this range.
+            remaining_guess_percentage = (valid_count/11229676)
 
-                # Only allows edge assignment for non-zero hits/guesses. Edges
-                # should approach 0, but an edge of 0 means we have no possible
-                # combinations to guess from, which is useless.
-                if (remaining_hit_percentage > 0 and
-                remaining_guess_percentage > 0):
-                    edge = remaining_guess_percentage/remaining_hit_percentage
+            # Only allows edge assignment for non-zero hits/guesses. Edges
+            # should approach 0, but an edge of 0 means we have no possible
+            # combinations to guess from, which is useless.
+            if (remaining_hit_percentage > 0 and
+            remaining_guess_percentage > 0):
+                edge = remaining_guess_percentage/remaining_hit_percentage
 
-                elif (remaining_hit_percentage == 0 or
-                remaining_guess_percentage == 0):
-                    edge = 1
+            elif (remaining_hit_percentage == 0 or
+            remaining_guess_percentage == 0):
+                edge = 1
 
-                # Prints information for a newly crowned 'best_edge'.
-                if edge < best_edge:
-                    print("Valid count is "+str(valid_count)+
-                    " out of 11229676.")
-                    print("Remaining guess percentage was "
-                    +str(remaining_guess_percentage))
-                    print("Remaining hit percentage was "
-                    +str(remaining_hit_percentage))
-                    print("Existing edge was "+str(best_edge)+"%.")
-                    best_edge = edge + 0
-                    print("Best edge is now "+str(best_edge)+"%.")
-                    best_low = lower_bound
-                    print("Best low is now "+str(best_low)+".")
-                    best_high = upper_bound
-                    print("Best high is now "+str(best_high)+".")
-                    print("*"*40)
+            # Prints information for a newly crowned 'best_edge'.
+            if edge < best_edge:
+                print("Valid count is "+str(valid_count)+
+                " out of 11229676.")
+                print("Remaining guess percentage was "
+                +str(remaining_guess_percentage))
+                print("Remaining hit percentage was "
+                +str(remaining_hit_percentage))
+                print("Existing edge was "+str(best_edge)+"%.")
+                best_edge = edge + 0
+                print("Best edge is now "+str(best_edge)+"%.")
+                best_low = lower_bound
+                print("Best low is now "+str(best_low)+".")
+                best_high = upper_bound
+                print("Best high is now "+str(best_high)+".")
+                print("*"*40)
 
-    # Prints final 'best_edge' from all combinations across all possible ranges.
-    print("Best edge was "+str(best_edge)+" resulting from the range "+
-    str(best_low)+" to "+str(best_high)+".")
+    # Prints final 'best_edge' from all combinations whose sum falls within this
+    # single 'lower_bound' and any valid 'upper_bound' range.
+    print("Best edge using a lower bound of "+str(lower_bound)+" was "+
+    str(best_edge)+" resulting from the range "+str(best_low)+" to "+
+    str(best_high)+".")
     print("*"*40)
 
 
@@ -323,3 +329,12 @@ def tell_me_combinations_within_range():
     " you've got a "+str(guess_within_range_chance)+"% chance of guessing the "+
     "right combination.\nCompared to your original 0.0000089% chance, that's "+
     "a(n) "+str(guess_within_range_chance/Decimal(0.0000089))+"x improvement!")
+
+
+if __name__ == "__main__":
+    retrieve_raw_lottery_data()
+    sum_all_winning_numbers()
+    pool = Pool()
+    pool.map(tell_me_all_possible_combinations,range(70,291))
+    pool.close()
+    pool.join()
