@@ -22,7 +22,7 @@ def retrieve_raw_lottery_data():
 
     # Fetches NY Powerball's past results CSV and converts it into a matrix.
     with requests.Session() as s:
-        results = s.get("https://data.ny.gov/resource/8vkr-v8vh.csv?$$app_token=vjxekB7YMF1tZ0e8Oz7cFezDP")
+        results = s.get("https://data.ny.gov/resource/8vkr-v8vh.csv")
         decode = results.content.decode("utf-8")
         raw = csv.reader(decode.splitlines(), delimiter =',')
         original_output = list(raw)
@@ -102,7 +102,7 @@ def sum_all_winning_numbers():
             pre_change.append(list_element)
 
     # Returns the matrix for 59 number drawings.
-    return pre_change
+    # return pre_change
 
     # Returns the matrix for 69 number drawings.
     return post_change
@@ -323,3 +323,12 @@ def tell_me_combinations_within_range():
     " you've got a "+str(guess_within_range_chance)+"% chance of guessing the "+
     "right combination.\nCompared to your original 0.0000089% chance, that's "+
     "a(n) "+str(guess_within_range_chance/Decimal(0.0000089))+"x improvement!")
+
+    print("*"*120)
+
+    print("Diagnostics: ")
+    print("Historical range = "+str(historical_range)+".")
+    print("Valid count = "+str(valid_count)+".")
+
+
+tell_me_combinations_within_range()
