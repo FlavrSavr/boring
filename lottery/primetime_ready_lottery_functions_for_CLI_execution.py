@@ -72,13 +72,26 @@ def sum_all_winning_numbers():
     # Counter ensuring only one copy of the header row appends to 'pre_change'.
     counter = 0
 
+    # Will be used to identify where the split between the 59 num drawing and
+    # 69 num drawing occurs.
+    correct_index = 0
+
     # Overwrites the column header 'winning_numbers' with 'winning_number_sum'.
     for index, list_element in enumerate(original_output):
         if index == 0:
             list_element[1] = "winning_number_sum"
 
-    # Overwrites the winning number combination for each drawing date (a string)
-    # with the sum of the winning numbers for that drawing date (an integer).
+        # Identifies which entries belong to Powerball's 69 num drawings. If
+        # you're wondering why I didn't just have one enumerate function with
+        # all of these if statements below it, it's because nothing gets
+        # appended if we don't set our 'correct_index' value before starting to
+        # iterate through the list and append elements. I know it's inefficient.
+        if list_element[0] == "2015-10-07":
+            correct_index = int(index)
+
+    for index, list_element in enumerate(original_output):
+        # Overwrites the winning number combination for each drawing date (str)
+        # with the sum of the winning numbers for that drawing date (an int).
         if index > 0:
             temporary = list_element[1]
             change1 = temporary.replace(" ",",")
@@ -90,21 +103,21 @@ def sum_all_winning_numbers():
             list_element[1] = change4
 
         # Isolates matrix entries that belong to Powerball's 69 num drawings.
-        if index < 292:
+        if index <= correct_index:
             post_change.append(list_element)
 
         # Isolates matrix entries that belong to Powerball's 59 num drawings.
         # Also appends headers that match those of the 'post_change' matrix.
-        if index >= 292:
+        if index > correct_index:
             while counter == 0:
                 pre_change.append(['draw_date','winning_number_sum'])
                 counter += 1
             pre_change.append(list_element)
 
-    # Returns the matrix for 59 number drawings.
+    # Uncomment below to return the matrix for 59 number drawings.
     # return pre_change
 
-    # Returns the matrix for 69 number drawings.
+    # Returns the matrix for 69 number drawings. Comment below to disable.
     return post_change
 
 
@@ -202,7 +215,7 @@ def tell_me_all_possible_combinations(x):
             remaining_hit_percentage = (historical_range/291)
 
             # Calculates 'remaining_guess_percentage' for this range.
-            remaining_guess_percentage = (valid_count/11229676)
+            remaining_guess_percentage = (valid_count/11238513)
 
             # Only allows edge assignment for non-zero hits/guesses. Edges
             # should approach 0, but an edge of 0 means we have no possible
@@ -238,97 +251,6 @@ def tell_me_all_possible_combinations(x):
     str(best_edge)+" resulting from the range "+str(best_low)+" to "+
     str(best_high)+".")
     print("*"*40)
-
-
-def tell_me_combinations_within_range():
-    """Prints % chance of a guess being correct within your defined sum range.
-
-    Args:
-        None
-
-    Returns:
-        Prints two statements. The first compares the chance of correctly
-        guessing the Powerball's winning combination if we restrict our
-        guesses to within a sum range, to the chance of correctly guessing the
-        Powerball's winning combination if we just make a random guess. A chance
-        multiplier is then calculated.
-
-        The second compares the chance of correctly guessing the Powerball's
-        winning combination if we restrict our guesses to within a sum range
-        when we know/assume that our sum range corresponds to the actual sum
-        range that is possible on this drawing, to the chance of correctly
-        guessing the Powerball's winning combination if we just make a random
-        guess. A chance multiplier is calculated for this case as well.
-
-    Raises:
-        None
-
-    """
-
-    # Counter for number of combinations that are left when we restrict their
-    # sum to a given range.
-    valid_count = 0
-
-    # Counter for number of historical Powerball drawings that we'd match if we
-    # restricted their sum to a given range.
-    historical_range = 0
-
-    number_set = [] # All playable numbers for our lottery.
-
-    # Set your own 'lower_bound'.
-    lower_bound = int(input("Type in lower bound for your range."))
-
-    # Set your own 'upper_bound'.
-    upper_bound = int(input("Type in upper bound for your range."))
-
-    # A matrix of dates and the sums of winning numbers for historical Powerball
-    # drawings. Excludes the Powerball number. Used for finding our
-    # 'historical_range'.
-    post_change = sum_all_winning_numbers()
-
-    # Populates our 'possible_low' with lower bounds 70-290 (inclusive).
-    for _ in range(1,70):
-        number_set.append(_)
-
-    # Assembles all unique combinations of 5 numbers from our 'number_set'.
-    possibles = itertools.combinations(number_set,r=5)
-
-    # Calculates 'valid_count' for our sum range with user-defined bounds.
-    for index, element in enumerate(possibles):
-        temporary_list = list(element)
-        sum = (temporary_list[0]+temporary_list[1]+temporary_list[2]+
-        temporary_list[3]+temporary_list[4])
-        if lower_bound <= sum <= upper_bound:
-            valid_count += 1
-
-    # Calculates 'historical_range' for our sum range with user-defined bounds.
-    for index, element_list in enumerate(post_change):
-        if index > 0:
-            if lower_bound <= int(element_list[1]) <= upper_bound:
-                historical_range += 1
-
-    getcontext().prec = 4 # Limits decimals to four significant figures.
-
-    # Calculates % chance of a random guess within the sum range being correct.
-    random_guess_chance = (100*((1/Decimal(valid_count))*
-    (Decimal(historical_range)/291)))
-
-    # Calculates % chance of a guess within the sum range being correct
-    # if you know the sum range is the limit of sums that could appear in the
-    # current drawing.
-    guess_within_range_chance = (100*(1/(Decimal(valid_count))))
-
-    print("If we assume that you're guessing randomly, you've got a "+
-    str(random_guess_chance)+"% chance of guessing the right combination."+
-    "\nCompared to your original 0.0000089% chance, that's a(n) "
-    +str(random_guess_chance/Decimal(0.0000089))+"x improvement!")
-
-    print("*"*120)
-
-    print("If we assume that you're only guessing inside your desired range,"+
-    " you've got a "+str(guess_within_range_chance)+"% chance of guessing the "+
-    "right combination.\nCompared to your original 0.0000089% chance, that's "+
-    "a(n) "+str(guess_within_range_chance/Decimal(0.0000089))+"x improvement!")
 
 
 if __name__ == "__main__":

@@ -72,13 +72,26 @@ def sum_all_winning_numbers():
     # Counter ensuring only one copy of the header row appends to 'pre_change'.
     counter = 0
 
+    # Will be used to identify where the split between the 59 num drawing and
+    # 69 num drawing occurs.
+    correct_index = 0
+
     # Overwrites the column header 'winning_numbers' with 'winning_number_sum'.
     for index, list_element in enumerate(original_output):
         if index == 0:
             list_element[1] = "winning_number_sum"
 
-    # Overwrites the winning number combination for each drawing date (a string)
-    # with the sum of the winning numbers for that drawing date (an integer).
+        # Identifies which entries belong to Powerball's 69 num drawings. If
+        # you're wondering why I didn't just have one enumerate function with
+        # all of these if statements below it, it's because nothing gets
+        # appended if we don't set our 'correct_index' value before starting to
+        # iterate through the list and append elements. I know it's inefficient.
+        if list_element[0] == "2015-10-07":
+            correct_index = int(index)
+
+    for index, list_element in enumerate(original_output):
+        # Overwrites the winning number combination for each drawing date (str)
+        # with the sum of the winning numbers for that drawing date (an int).
         if index > 0:
             temporary = list_element[1]
             change1 = temporary.replace(" ",",")
@@ -90,21 +103,21 @@ def sum_all_winning_numbers():
             list_element[1] = change4
 
         # Isolates matrix entries that belong to Powerball's 69 num drawings.
-        if index < 292:
+        if index <= correct_index:
             post_change.append(list_element)
 
         # Isolates matrix entries that belong to Powerball's 59 num drawings.
         # Also appends headers that match those of the 'post_change' matrix.
-        if index >= 292:
+        if index > correct_index:
             while counter == 0:
                 pre_change.append(['draw_date','winning_number_sum'])
                 counter += 1
             pre_change.append(list_element)
 
-    # Uncomment to return the matrix for 59 number drawings.
+    # Uncomment below to return the matrix for 59 number drawings.
     # return pre_change
 
-    # Returns the matrix for 69 number drawings.
+    # Returns the matrix for 69 number drawings. Comment below to disable.
     return post_change
 
 
@@ -122,10 +135,6 @@ def tell_me_all_possible_combinations():
 
     Raises:
         None
-
-    To Do:
-        Verify the number of all possible combinations. Correct value may be
-        11238513 as opposed to the current 11229676.
 
     """
 
@@ -198,7 +207,7 @@ def tell_me_all_possible_combinations():
                 remaining_hit_percentage = (historical_range/291)
 
                 # Calculates 'remaining_guess_percentage' for this range.
-                remaining_guess_percentage = (valid_count/11229676)
+                remaining_guess_percentage = (valid_count/11238513)
 
                 # Only allows edge assignment for non-zero hits/guesses. Edges
                 # should approach 0, but an edge of 0 means we have no possible
