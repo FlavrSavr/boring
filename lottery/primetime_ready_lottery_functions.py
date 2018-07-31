@@ -332,3 +332,5 @@ def tell_me_combinations_within_range():
     " you've got a "+str(guess_within_range_chance)+"% chance of guessing the "+
     "right combination.\nCompared to your original 0.0000089% chance, that's "+
     "a(n) "+str(guess_within_range_chance/Decimal(0.0000089))+"x improvement!")
+
+tell_me_combinations_within_range()

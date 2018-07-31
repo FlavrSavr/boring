@@ -37,7 +37,7 @@ def retrieve_raw_lottery_data():
     return original_output
 
 
-def give_high_performing_numbers():
+def give_high_performing_normal_numbers():
     """Returns a list of normal Powerball numbers that perform >= average.
 
     Args:
@@ -67,7 +67,7 @@ def give_high_performing_numbers():
 
     # Contains numbers that perform average or better (>= 0.0144) with respect
     # to draw frequency in the Powerball.
-    high_performing_numbers = []
+    high_performing_normal_numbers = []
 
     for index, list_element in enumerate(original_output):
 
@@ -108,10 +108,86 @@ def give_high_performing_numbers():
     # Populates the 'output_list' with average or above average performing nums.
     for key, value in dictionary.items():
         if value >= 0.0144:
-            high_performing_numbers.append(key)
+            high_performing_normal_numbers.append(key)
 
     # Returns the list for average or above average performing numbers.
-    return high_performing_numbers
+    return high_performing_normal_numbers
+
+
+def give_high_performing_powerball_numbers():
+    """Writes a CSV file of "Powerball" numbers and their draw distribution.
+
+    Args:
+        None
+
+    Returns:
+        A CSV file where the first column contains each "Powerball" number
+        and the second column contains the corresponding draw distribution
+        for that number. Please update your directory path accordingly if you're
+        not me.
+
+    Raises:
+        None
+
+    """
+
+    # Retrieves the matrix of Powerball drawing dates and winning combinations.
+    original_output = retrieve_raw_lottery_data()
+
+    # Portion of the matrix that corresponds to Powerball's 35+ number drawing.
+    pre_change_powerball = []
+
+    # Portion of the matrix that corresponds to Powerball's 26 number drawing.
+    post_change_powerball = []
+
+    # Counter ensuring only one copy of the header row appends to
+    # 'pre_change_powerball'.
+    counter = 0
+
+    # Counter used to identify how many qualifing drawings have occurred.
+    powerball_counter = 0
+
+    # Will be used to identify where the split between the 26 num drawing and
+    # 35+ num drawing occurs.
+    correct_index = 0
+
+    # Contains Powerball numbers and the frequency that they're drawn.
+    output_list = []
+
+    for index, list_element in enumerate(original_output):
+
+        # Strips the header row, which is not necessary.
+        if index == 0:
+            original_output.remove(list_element)
+
+        # Identifies which entries belong to Powerball's 26 num drawing.
+        if list_element[0] == "2015-10-07":
+            correct_index = int(index)
+
+    for index, list_element in enumerate(original_output):
+
+        # Overwrites the winning number combination for each drawing date (str)
+        # with the "Powerball" number for that drawing date (an int).
+        temporary = list_element[1]
+        change1 = temporary.replace(" ",",")
+        change2 = (int(change1[15]+change1[16]))
+        list_element[1] = change2
+
+        # Isolates matrix entries that belong to Powerball's 26 num drawing.
+        if index <= correct_index:
+            post_change_powerball.append(list_element[1])
+
+        # Isolates matrix entries that belong to Powerball's 35+ num drawings.
+        if index > correct_index:
+            pre_change_powerball.append(list_element[1])
+
+    # Populates a new list with all possible "Powerball" numbers and their
+    # draw distribution.
+    powerball_dictionary = dict(Counter(post_change_powerball))
+    for key, value in powerball_dictionary.items():
+        powerball_counter += value
+    for key, value in powerball_dictionary.items():
+        output_list.append([key,(value/powerball_counter)])
 
 
 def give_me_qualifying_combinations(x):
@@ -182,3 +258,36 @@ def give_me_qualifying_combinations(x):
 if __name__ == "__main__":
     give_me_qualifying_combinations(int(input("How many combinations would "+
     "you like to play? ")))
+
+running_counter = 0
+running_tab = 0
+powerball_dist_dict = {}
+for list_element in output_list:
+    if output_list[1] >= 0.038:
+        if running_counter == 0:
+            powerball_dist_dict[[running_tab, (output_list[1]+0.0000000000000001)]] = output_list[0]
+            running_tab += output_list[1]
+            running_counter += 1
+        else:
+            powerball_dist_dict[[running_tab, (output_list[1]+running_tab)]] = output_list[0]
+            running_tab += output_list[1]
+
+random_number = random.random()
+
+for key_range, value in powerball_dist_dict.items():
+    for upper, lower in key_range:
+        if lower <= random_number < upper:
+            chosen_number = value
+
+return value
+
+
+
+
+
+
+
+
+
+powerball_dist_dict = {[0, 0.0612000000000001]: 9, [0.0612000000000001, 0.1122000000000001]: 21, [0.1122000000000001,] }
+random_number = random.random()

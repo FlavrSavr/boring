@@ -1,3 +1,4 @@
+import random
 import csv
 import requests
 from collections import Counter
@@ -110,6 +111,41 @@ def write_powerball_numbers():
     for key, value in powerball_dictionary.items():
         output_list.append([key,(value/powerball_counter)])
 
+    qualifying_total = 0
+    running_counter = 0
+    running_tab = 0
+    powerball_dist_dict = {}
+
+    for list_element in output_list:
+        if list_element[1] >= 0.038:
+            qualifying_total += list_element[1]
+
+
+    for list_element in output_list:
+        if list_element[1] >= 0.038:
+            if running_counter == 0:
+                print(list_element[1])
+                print("*"*10)
+                powerball_dist_dict[(running_tab, ((list_element[1]/qualifying_total)+0.0000000000000001))] = list_element[0]
+                running_tab += list_element[1]
+                running_counter += 1
+            else:
+                powerball_dist_dict[(running_tab, (list_element[1]+running_tab))] = list_element[0]
+                running_tab += list_element[1]
+
+    print(powerball_dist_dict)
+
+    random_number = random.random()
+    print(random_number)
+
+    for key_range, value in powerball_dist_dict.items():
+        if key_range[0] <= random_number < key_range[1]:
+            chosen_number = value
+
+    print(chosen_number)
+
+
+"""
     # Writes 'output_list' draw distribution matrix to a CSV file. If the file
     # exists, it will overwrite it. This is the intended behavior. Analyzing
     # outdated results is not as useful.
@@ -118,7 +154,9 @@ def write_powerball_numbers():
     "w", newline = '') as file:
         writer = csv.writer(file)
         writer.writerows(output_list)
+"""
 
+write_powerball_numbers()
 
-if __name__ == "__main__":
+|if __name__ == "__main__":
     write_powerball_numbers()
