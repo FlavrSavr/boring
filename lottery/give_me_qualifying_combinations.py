@@ -102,29 +102,183 @@ def give_high_performing_normal_numbers():
     # times the number was drawn.
     for key, value in dictionary.items():
         counter += value
+
     dictionary.update((key, (value/counter)) for key, value
     in dictionary.items())
 
     # Populates the 'output_list' with average or above average performing nums.
     for key, value in dictionary.items():
+
         if value >= 0.0144:
-            high_performing_normal_numbers.append(key)
+            high_performing_normal_numbers.append([key, value])
 
     # Returns the list for average or above average performing numbers.
     return high_performing_normal_numbers
 
 
-def give_high_performing_powerball_numbers():
-    """Writes a CSV file of "Powerball" numbers and their draw distribution.
+def give_me_qualifying_combinations(x):
+    """Prints a requested number of combinations made from high performing nums.
 
     Args:
-        None
+        x = Number of combinations you wanted to generate
 
     Returns:
-        A CSV file where the first column contains each "Powerball" number
-        and the second column contains the corresponding draw distribution
-        for that number. Please update your directory path accordingly if you're
-        not me.
+        'x' number of combinations of five average or above average performing
+        normal Powerball numbers. The numbers in each combination are sorted
+        from smallest to largest for readability. Intended to be executed from
+        a CLI, this function has no file path dependencies.
+
+    Raises:
+        None
+
+    """
+
+    # Our list of Powerball numbers that perform average or above average.
+    high_performing_numbers = give_high_performing_normal_numbers()
+
+    # The value for our range's lower bound.
+    lower_bound = int(input("What's your lower bound? "))
+
+    # The value for our range's upper bound.
+    upper_bound = int(input("What's your upper bound? "))
+
+    chosen_combinations = [] # List of randomly selected qualifying combinations
+
+    # Sum of all draw frequencies for normal Powerball numbers that perform
+    # average or better (>= 0.0144). Used to find weighted average of draw
+    # frequency for high performing numbers.
+    qualifying_total = 0
+
+    # Counter that keeps track of the low end of ranges inside our
+    # 'normal_dist_dict'.
+    running_tab = 0
+
+    # This will be explained later. Wall of comment incoming.
+    normal_dist_dict = {}
+
+    # Calculates the total draw frequency for numbers that perform
+    # average or better. Used to calculate the weighted average of each high
+    # performing number's draw frequency among all high performing numbers.
+    for list_element in high_performing_numbers:
+            qualifying_total += list_element[1]
+
+    # Establishes a dictionary where tuples are keys, and the high performing
+    # normal numbers are the values. Each tuple is the draw frequency for
+    # that normal number among high performing numbers, represented as a
+    # portion of 0.0 to 1.0. Because we want to use a randomly generated float
+    # between 0.0 and 1.0 to select a number, these ranges must be continuous
+    # between different normal numbers. That is, they cannot overlap, and
+    # cannot all start at 0. So, each tuple essentially has a meaning of:
+    # (where last number's frequency left off,
+    # where last number's frequency left off + this number's frequency).
+
+    # For example, let's say we had two high performing normal numbers to
+    # choose from: 10 and 12. Among their high performing counterparts, 10 has
+    # a draw frequency of 0.45 and 12 has a draw frequency of 0.55. Their
+    # 'normal_dist_dict' would look like: {(0, 0.4500000000000001): 10,
+    # (0.4500000000000001, 1.0): 12}.
+    for list_element in high_performing_numbers:
+
+            normal_dist_dict[(running_tab,
+            (((list_element[1]/qualifying_total)+0.0000000000000001)+
+            running_tab))] = list_element[0]
+
+            running_tab += ((list_element[1]/qualifying_total)+
+            0.0000000000000001)
+
+    # Populates our 'chosen_combinations' with our specified number of randomly
+    # selected combinations, provided that they satisfy our qualifications.
+    for _ in range(1,(x+1)):
+
+        # We'll loop first here so that if a 'potential_combination' doesn't
+        # satisfy our requirements, it doesn't count for how many combinations
+        # we asked the function to generate.
+        while True:
+
+            # Reset 'potential_combination' so that each one starts empty.
+            potential_combination = []
+
+            # We need five numbers inside one 'potential_combination', so we'll
+            # iterate through a for loop five times.
+            for _ in range(1,6):
+
+                # We'll loop again because some conditions require us to throw
+                # a number out. Only numbers that satisfy the conditions will
+                # break the loop and be used inside a 'potential_combination'.
+                while True:
+
+                    # First, we'll select our random number between 0.0 and 1.0.
+                    random_number = random.uniform(0.0, 1.0)
+
+                    # Now we'll select the normal number whose range contains
+                    # 'random_number'. This is used for selecting high
+                    # performing normal Powerball numbers with the
+                    # same bias they're drawn with in historical drawings.
+                    for key_range, value in normal_dist_dict.items():
+
+                        if key_range[0] <= random_number < key_range[1]:
+                            chosen_number = value
+
+                    # We can't have duplicate numbers inside a
+                    # 'potential_combination', so we'll restart the while loop
+                    # to pick another number if we get a duplicate.
+                    if chosen_number in potential_combination:
+                        continue
+
+                    # Provided our number isn't already inside our
+                    # 'potential_combination', we'll append it and break
+                    # the while loop to count against our five times we want
+                    # a number added.
+                    else:
+                        potential_combination.append(chosen_number)
+                    break
+
+            # We'll sort the normal numbers in place so that they're easier
+            # to read when we go to print them.
+            potential_combination.sort()
+
+            # The sum of our potential_combination, used to determine if its
+            # within our allowed sum range.
+            combination_sum = sum(potential_combination)
+
+            # Provided that our 'potential_combination' has a 'combination_sum'
+            # that's within our allowed range, and that our
+            # 'potential_combination' hasn't already been chosen, we'll add it
+            # to our 'chosen_combinations' list and break the top-level while
+            # loop to count against the x number of combinations we want to
+            # generate.
+            if lower_bound <= combination_sum <= upper_bound:
+
+                if potential_combination not in chosen_combinations:
+                    chosen_combinations.append(potential_combination)
+                    break
+
+                # If our 'potential_combination' is already in our
+                # 'chosen_combinations' list, we'll pass a continue and
+                # generate a new 'potential_combination' in its place.
+                else:
+                    continue
+
+    # Returns our list of chosen combinations (a list of lists).
+    return chosen_combinations
+
+
+def append_powerball_numbers_and_give_results(x):
+    """Adds Powerball numbers to normal number combinations and prints results.
+
+    Args:
+        x = Number of Powerball numbers you wanted to generate and append to
+        your x number of normal number combinations.
+
+        Intended to be synchronized with give_me_qualifying_combinations(x) by
+        using the same arg variable. Theoretically, you want the same amount of
+        Powerball numbers as you have combinations.
+
+    Returns:
+        x number of user-requested Powerball combinations, with Powerball
+        numbers appended, printed to the screen for playing. Only historically
+        average or above average performing Powerball numbers are selected, and
+        their real, in-game bias is used for their selection in this function.
 
     Raises:
         None
@@ -140,10 +294,6 @@ def give_high_performing_powerball_numbers():
     # Portion of the matrix that corresponds to Powerball's 26 number drawing.
     post_change_powerball = []
 
-    # Counter ensuring only one copy of the header row appends to
-    # 'pre_change_powerball'.
-    counter = 0
-
     # Counter used to identify how many qualifing drawings have occurred.
     powerball_counter = 0
 
@@ -153,6 +303,24 @@ def give_high_performing_powerball_numbers():
 
     # Contains Powerball numbers and the frequency that they're drawn.
     output_list = []
+
+    # Sum of all draw frequencies for Powerball numbers that perform average or
+    # better (>= 0.038). Used to find weighted average of draw frequency for
+    # high performing numbers.
+    qualifying_total = 0
+
+    # Counter that keeps track of the low end of ranges inside our
+    # 'powerball_dist_dict'.
+    running_tab = 0
+
+    # This will be explained later. Wall of comment incoming.
+    powerball_dist_dict = {}
+
+    # List of characters to replace in final output.
+    replace_dictionary = {"[": "", "]": ""}
+
+    # Retrieves the chosen combinations of normal Powerball numbers.
+    chosen_combinations = give_me_qualifying_combinations(x)
 
     for index, list_element in enumerate(original_output):
 
@@ -177,77 +345,78 @@ def give_high_performing_powerball_numbers():
         if index <= correct_index:
             post_change_powerball.append(list_element[1])
 
-        # Isolates matrix entries that belong to Powerball's 35+ num drawings.
-        if index > correct_index:
-            pre_change_powerball.append(list_element[1])
-
-    # Populates a new list with all possible "Powerball" numbers and their
-    # draw distribution.
+    # Populates a new list with all possible post change Powerball numbers and
+    # their draw frequency.
     powerball_dictionary = dict(Counter(post_change_powerball))
+
     for key, value in powerball_dictionary.items():
         powerball_counter += value
+
     for key, value in powerball_dictionary.items():
         output_list.append([key,(value/powerball_counter)])
 
+    # Calculates the total draw frequency for numbers that perform
+    # average or better. Used to calculate the weighted average of each high
+    # performing number's draw frequency among all high performing numbers.
+    for list_element in output_list:
 
-def give_me_qualifying_combinations(x):
-    """Prints a requested number of combinations made from high performing nums.
+        if list_element[1] >= 0.038:
+            qualifying_total += list_element[1]
 
-    Args:
-        x = Number of combinations you want to generate
+    # Establishes a dictionary where tuples are keys, and the high performing
+    # Powerball numbers are the values. Each tuple is the draw frequency for
+    # that Powerball number among high performing numbers, represented as a
+    # portion of 0.0 to 1.0. Because we want to use a randomly generated float
+    # between 0.0 and 1.0 to select a number, these ranges must be continuous
+    # between different Powerball numbers. That is, they cannot overlap, and
+    # cannot all start at 0. So, each tuple essentially has a meaning of:
+    # (where last number's frequency left off,
+    # where last number's frequency left off + this number's frequency).
 
-    Returns:
-        'x' number of combinations of five average or above average performing
-        normal Powerball numbers. The numbers in each combination are sorted
-        from smallest to largest for readability. Intended to be executed from
-        a CLI, this function has no file path dependencies.
+    # For example, let's say we had two high performing Powerball numbers to
+    # choose from: 10 and 12. Among their high performing counterparts, 10 has
+    # a draw frequency of 0.45 and 12 has a draw frequency of 0.55. Their
+    # 'powerball_dist_dict' would look like: {(0, 0.4500000000000001): 10,
+    # (0.4500000000000001, 1.0): 12}.
+    for list_element in output_list:
 
-    Raises:
-        None
+        if list_element[1] >= 0.038:
+            powerball_dist_dict[(running_tab,
+            (((list_element[1]/qualifying_total)+0.0000000000000001)+
+            running_tab))] = list_element[0]
 
-    """
+            running_tab += ((list_element[1]/qualifying_total)+
+            0.0000000000000001)
 
-    # Our list of Powerball numbers that perform average or above average.
-    high_performing_numbers = give_high_performing_numbers()
 
-    # The value for our range's lower bound.
-    lower_bound = int(input("What's your lower bound? "))
+    for list_element in chosen_combinations:
 
-    # The value for our range's upper bound.
-    upper_bound = int(input("What's your upper bound? "))
+        # Selects our random number between 0.0 and 1.0 so we can choose a
+        # Powerball number.
+        random_number = random.uniform(0.0, 1.0)
 
-    chosen_combinations = [] # List of randomly selected qualifying combinations
+        # Picks the Powerball number that has the range 'random_number' belongs
+        # within. Used for selecting high performing Powerball numbers with the
+        # same bias that they have in historical drawings.
+        for key_range, value in powerball_dist_dict.items():
+            if key_range[0] <= random_number < key_range[1]:
 
-    replace_dictionary = {"[": "", "]": ""} # List of characters to replace.
-
-    # Assembles all possible unique combinations of 5 numbers from our
-    # 'high_performing_numbers' list.
-    combination_list = list(itertools.combinations(high_performing_numbers,r=5))
-
-    # Populates our 'chosen_combinations' with our specified number of randomly
-    # selected combinations, provided that they satisfy our qualifications.
-    for _ in range(1,(x+1)):
-        while True:
-            potential_combination = list(random.choice(combination_list))
-            potential_combination.sort()
-            combination_sum = sum(potential_combination)
-            if lower_bound <= combination_sum <= upper_bound:
-                if potential_combination not in chosen_combinations:
-                    chosen_combinations.append(potential_combination)
-                    break
-                else:
-                    continue
-            else:
-                continue
+                # Number chosen for this combination.
+                chosen_number = value
+                list_element.append(chosen_number)
 
     print("*"*37)
     print("Here are your requested combinations:")
     print("*"*37)
 
-    # Replace the list format of each combination
+    # Remove the brackets around each 'combination_list' inside
+    # our 'chosen_combinations' list so that they display more elegantly,
+    # then print each 'combination_list'.
     for element_list in chosen_combinations:
+
         temp = str(element_list)
         for initial, edit in replace_dictionary.items():
+
             temp = temp.replace(initial, edit)
         print(temp)
 
@@ -255,39 +424,7 @@ def give_me_qualifying_combinations(x):
     print("Good luck!")
     print("*"*37)
 
+
 if __name__ == "__main__":
-    give_me_qualifying_combinations(int(input("How many combinations would "+
+    append_powerball_numbers_and_give_results(int(input("How many combinations would "+
     "you like to play? ")))
-
-running_counter = 0
-running_tab = 0
-powerball_dist_dict = {}
-for list_element in output_list:
-    if output_list[1] >= 0.038:
-        if running_counter == 0:
-            powerball_dist_dict[[running_tab, (output_list[1]+0.0000000000000001)]] = output_list[0]
-            running_tab += output_list[1]
-            running_counter += 1
-        else:
-            powerball_dist_dict[[running_tab, (output_list[1]+running_tab)]] = output_list[0]
-            running_tab += output_list[1]
-
-random_number = random.random()
-
-for key_range, value in powerball_dist_dict.items():
-    for upper, lower in key_range:
-        if lower <= random_number < upper:
-            chosen_number = value
-
-return value
-
-
-
-
-
-
-
-
-
-powerball_dist_dict = {[0, 0.0612000000000001]: 9, [0.0612000000000001, 0.1122000000000001]: 21, [0.1122000000000001,] }
-random_number = random.random()
